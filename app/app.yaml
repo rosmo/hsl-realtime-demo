@@ -1,0 +1,12 @@
+service: hsl-realtime
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT app:app
+
+runtime_config:
+  python_version: 3
+
+env_variables:
+    REDIS_HOST: 10.0.0.11
+    REDIS_PORT: 6379
+  
