@@ -138,7 +138,7 @@ function initMap() {
           });
         } else if (bus.length > 0) {
           const url = 'images/busmarker_8.png';
-          const marker = new google.maps.Marker({
+          const marker = new SlidingMarker({
             position: {
               lat: bus[0][1][1],
               lng: bus[0][1][0]
@@ -155,10 +155,10 @@ function initMap() {
             zIndex: 99999
           });
           
-          var infowindow = new google.maps.InfoWindow({
-            content: '<p>Route: ' + bus[0][0] + '</p><p>Speed: ' + bus[0][2] + ' km/h</p>'
-          });
           google.maps.event.addListener(marker, 'click', function() {
+            var infowindow = new google.maps.InfoWindow({
+              content: '<p>Route: ' + bus[0][0] + '</p><p>Speed: ' + Math.round(bus[0][2] * 3.6) + ' km/h</p>'
+            });
             infowindow.open(map, marker);
           });
           busLocationMarkers[key] = marker;

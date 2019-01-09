@@ -76,6 +76,22 @@ WHERE
   row_num = 1;
 ```
 
+Assume you have a table containing `(name STRING, area GEOGRAPHY)` in table `traffic_areas`, get the
+speed of traffic in those areas (as defined with polygons) for the last hour:
+
+```
+SELECT ROW_NUMBER() OVER() AS row_number, name, ANY_VALUE(area) AS area, AVG(speed) AS average_speed FROM 
+(SELECT 
+  a.name, a.area, speed
+FROM hsl.traffic_areas AS a
+CROSS JOIN
+ hsl.realtime AS b
+WHERE
+ b.location IS NOT NULL AND b.timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR) AND ST_WITHIN(ST_GeogFromText(b.location), a.area)
+)
+GROUP BY 2;
+```
+
 ## Components used
 
 - Animated Marker Movement: Robert Gerlach 2012-2013 https://github.com/combatwombat/marker-animate (MIT license)

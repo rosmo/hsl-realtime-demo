@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: eu.gcr.io/taneli-sandbox/hsl-realtime-demo-frontend:v7
+        image: eu.gcr.io/taneli-sandbox/hsl-realtime-demo-frontend:v9
         readinessProbe:
           httpGet:
             path: /healthz
