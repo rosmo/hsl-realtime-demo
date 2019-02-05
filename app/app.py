@@ -45,7 +45,7 @@ def jsondata():
                         res.append(list(map(float, location)))
                     else:
                         res.append(decoded[k])
-            if len(res) == 5:
+            if len(res) > 0:
                 result[key.decode('utf-8')].append(res)
 
     resp = make_response(jsonify(result), 200)

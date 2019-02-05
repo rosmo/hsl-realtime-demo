@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/certifi/gocertifi"
 
@@ -17,6 +19,7 @@ import (
 
 	"flag"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -32,6 +35,7 @@ func main() {
 
 	var _projectID = flag.String("project", "", "set GCP project id")
 	var _topicName = flag.String("topic", "", "set Pub/Sub topic (default hsl-realtime-data)")
+	var _simulate = flag.String("simulate", "", "set filename to read simulation data from")
 	var stripVP = flag.Bool("strip", false, "strip VP1 from JSON data (default false)")
 	var debug = flag.Bool("debug", false, "print messages and debug info")
 	flag.IntVar(&geohashLevel, "geohash", 0, "specify geohash level (default=0)")
@@ -85,6 +89,71 @@ func main() {
 
 	// Terminate the Client.
 	defer cli.Terminate()
+
+	if *_simulate != "" {
+		file, err := os.Open(*_simulate)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		line := 0
+		scanner := bufio.NewScanner(file)
+		var timer int32 = int32(time.Now().Unix())
+		var first_time int32 = 0
+		for scanner.Scan() {
+			if line > 0 {
+				var tst string = "TIMESTAMP"
+				var tsi string = "unixtime"
+
+				s := scanner.Text()
+				ss := strings.Split(s, ",")
+				if first_time == 0 {
+					_first_time, _ := strconv.Atoi(ss[6])
+					first_time = int32(_first_time)
+				}
+				_check, _ := strconv.Atoi(ss[6])
+				if int32(_check) != first_time {
+					// wait until next second
+					for int32(time.Now().Unix())-timer == 0 {
+						time.Sleep(time.Duration(50) * time.Microsecond)
+					}
+					timer = int32(time.Now().Unix())
+					_first_time, _ := strconv.Atoi(ss[6])
+					first_time = int32(_first_time)
+				}
+
+				latlon := strings.Split(ss[8][6:len(ss[8])-1], " ")
+				var lat string = latlon[0]
+				var lon string = latlon[1]
+				tsi = fmt.Sprintf("%d", timer)
+				unixTimeUTC := time.Unix(int64(timer), 0)
+				tst = unixTimeUTC.Format("2006-01-02T15:04:05Z")
+
+				odo, _ := strconv.Atoi(ss[11])
+				drst, _ := strconv.Atoi(ss[12])
+				spd, _ := strconv.ParseFloat(ss[6], 64)
+				acc, _ := strconv.ParseFloat(ss[9], 64)
+				msg := fmt.Sprintf("{\"VP\":{\"desi\":\"%s\",\"dir\":\"%s\",\"oper\":\"%s\",\"veh\":\"%s\",\"tst\":\"%s\",\"tsi\":\"%s\",\"spd\":\"%f\",\"hdg\":\"%s\",\"lat\":\"%s\",\"lon\":\"%s\",\"acc\":\"%f\",\"dl\":\"%s\",\"odo\":\"%d\",\"drst\":\"%d\",\"oday\":\"%s\",\"jrn\":\"%s\",\"line\":\"%s\",\"start\":\"%s\"}}", ss[0], ss[1], ss[2], ss[3], tst, tsi, spd, ss[7], lat, lon, acc, ss[10], odo, drst, ss[13], ss[14], ss[15], ss[16])
+				for loop := 0; loop < 10; loop++ {
+					psMessage := new(pubsub.Message)
+					psMessage.Data = []byte(msg)
+					psMessage.Attributes = map[string]string{"originalTopic": string(topicName)}
+					if publishResult := psTopic.Publish(ctx, psMessage); publishResult == nil {
+						log.Fatalf("Failed to publish: %v", err)
+					}
+				}
+
+				fmt.Println(msg)
+			}
+			line = line + 1
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+		panic("I'm done")
+	}
 
 	cert_pool, err := gocertifi.CACerts()
 

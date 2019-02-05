@@ -92,6 +92,22 @@ WHERE
 GROUP BY 2;
 ```
 
+```
+SELECT ROW_NUMBER() OVER() AS row_number, name, ANY_VALUE(area) AS area, AVG(speed) AS average_speed FROM 
+(SELECT 
+  a.name, a.area, speed
+FROM hsl.traffic_areas AS a
+CROSS JOIN
+ hsl.realtime AS b
+WHERE
+ b.location IS NOT NULL AND b.timestamp >= TIMESTAMP_SUB((SELECT MAX(timestamp) FROM hsl.realtime), INTERVAL 1 HOUR) AND ST_WITHIN(ST_GeogFromText(b.location), a.area)
+)
+GROUP BY 2;
+```
+
+You can use Google Maps to draw the polygons, export to KML and use the `kms-to-bigquery.py`
+script to translate the polygons into WKT format.
+
 ## Components used
 
 - Animated Marker Movement: Robert Gerlach 2012-2013 https://github.com/combatwombat/marker-animate (MIT license)
