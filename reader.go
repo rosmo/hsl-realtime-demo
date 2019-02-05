@@ -124,18 +124,19 @@ func main() {
 				}
 
 				latlon := strings.Split(ss[8][6:len(ss[8])-1], " ")
-				var lat string = latlon[0]
-				var lon string = latlon[1]
+				var lat string = latlon[1]
+				var lon string = latlon[0]
 				tsi = fmt.Sprintf("%d", timer)
 				unixTimeUTC := time.Unix(int64(timer), 0)
 				tst = unixTimeUTC.Format("2006-01-02T15:04:05Z")
 
 				odo, _ := strconv.Atoi(ss[11])
 				drst, _ := strconv.Atoi(ss[12])
+				dl, _ := strconv.Atoi(ss[10])
 				spd, _ := strconv.ParseFloat(ss[6], 64)
 				acc, _ := strconv.ParseFloat(ss[9], 64)
-				msg := fmt.Sprintf("{\"VP\":{\"desi\":\"%s\",\"dir\":\"%s\",\"oper\":\"%s\",\"veh\":\"%s\",\"tst\":\"%s\",\"tsi\":\"%s\",\"spd\":\"%f\",\"hdg\":\"%s\",\"lat\":\"%s\",\"lon\":\"%s\",\"acc\":\"%f\",\"dl\":\"%s\",\"odo\":\"%d\",\"drst\":\"%d\",\"oday\":\"%s\",\"jrn\":\"%s\",\"line\":\"%s\",\"start\":\"%s\"}}", ss[0], ss[1], ss[2], ss[3], tst, tsi, spd, ss[7], lat, lon, acc, ss[10], odo, drst, ss[13], ss[14], ss[15], ss[16])
-				for loop := 0; loop < 10; loop++ {
+				msg := fmt.Sprintf("{\"VP\":{\"desi\":\"%s\",\"dir\":\"%s\",\"oper\":\"%s\",\"veh\":\"%s\",\"tst\":\"%s\",\"tsi\":\"%s\",\"spd\":\"%f\",\"hdg\":\"%s\",\"lat\":\"%s\",\"long\":\"%s\",\"acc\":\"%f\",\"dl\":\"%d\",\"odo\":\"%d\",\"drst\":\"%d\",\"oday\":\"%s\",\"jrn\":\"%s\",\"line\":\"%s\",\"start\":\"%s\"}}", ss[0], ss[1], ss[2], ss[3], tst, tsi, spd, ss[7], lat, lon, acc, dl, odo, drst, ss[13], ss[14], ss[15], ss[16])
+				for loop := 0; loop < 4; loop++ {
 					psMessage := new(pubsub.Message)
 					psMessage.Data = []byte(msg)
 					psMessage.Attributes = map[string]string{"originalTopic": string(topicName)}
