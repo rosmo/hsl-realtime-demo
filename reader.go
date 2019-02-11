@@ -167,7 +167,7 @@ func main() {
 		// Network is the network on which the Client connects to.
 		Network: "tcp",
 		// Address is the address which the Client connects to.
-		Address: "mqtt.hsl.fi:443",
+		Address: "mqtt.hsl.fi:8883",
 		// TLSConfig is the configuration for the TLS connection.
 		// If this property is not nil, the Client tries to use TLS
 		// for the connection.
